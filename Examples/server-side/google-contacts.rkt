@@ -35,11 +35,19 @@
   
   (define (get-contacts request)
     
-   (let ([json-obj (get-authorization oauth-obj) ])
-     (let ([contacts (get-all-contacts (hash-ref json-obj 'access_token))])
-                      (printf "~a\n" contacts)
-                      (response/xexpr
-                       `(html (body (h1 "Success in retreiving contacts")))))))
+    (define json-obj (get-authorization oauth-obj))
+    (define contacts (get-all-contacts (hash-ref json-obj 'access_token)))
+    (begin
+      (printf "~a\n" contacts)
+      (response/xexpr
+       `(html (body (h1 "Success in retrieving contacts"))))))
+      
+    
+;   (let ([json-obj (get-authorization oauth-obj) ])
+;     (let ([contacts (get-all-contacts (hash-ref json-obj 'access_token))])
+;                      (printf "~a\n" contacts)
+;                      (response/xexpr
+;                       `(html (body (h1 "Success in retreiving contacts")))))))
                  
   (send/suspend/dispatch gen-resp))
 
@@ -59,25 +67,51 @@
         (get-value 'error bindings)
         #f))
   
-  (let ([req (send/suspend
-                (lambda (make-url)
-                  (redirect-to 
-                   (request-owner-for-grant oauth-obj 
-                                            #:state (encode make-url)
-                                            #:scope scope))))])
-    (let ([bindings (get-bindings req)])
-      (let ([code (get-code bindings)])
-        (if code
-            
-            (let ([json-obj (request-access-token oauth-obj #:code code)])
-              (if (hash-ref json-obj 'error #f)
-                  (response/xexpr
-                   `(html (body (h1 ,(hash-ref json-obj 'error)))))
-                  json-obj))
+  (define req (send/suspend
+               (lambda (make-url)
+                 (redirect-to 
+                  (request-owner-for-grant oauth-obj 
+                                           #:state (encode make-url)
+                                           #:scope scope)))))
+  
+  ;  (let ([req (send/suspend
+  ;                (lambda (make-url)
+  ;                  (redirect-to 
+  ;                   (request-owner-for-grant oauth-obj 
+  ;                                            #:state (encode make-url)
+  ;                                            #:scope scope))))])
+  (define bindings (get-bindings req))
+  (define code (get-code bindings))
+  (define error (get-error bindings))
+  
+  (if code
+      
+      (let ([json-obj (request-access-token oauth-obj #:code code)])
+        (if (hash-ref json-obj 'error #f)
             
             (response/xexpr
-             `(html (body (h1 "Error: " ,(or (get-error bindings)
-                                             "unknown error"))))))))))
+             `(html (body (h1 ,(hash-ref json-obj 'error)))))
+            
+            json-obj))
+      
+      (response/xexpr
+       `(html (body (h1 "Error: " ,(or (get-error bindings)
+                                       "unknown error")))))))
+
+  
+;    (let ([bindings (get-bindings req)])
+;      (let ([code (get-code bindings)])
+;        (if code
+;            
+;            (let ([json-obj (request-access-token oauth-obj #:code code)])
+;              (if (hash-ref json-obj 'error #f)
+;                  (response/xexpr
+;                   `(html (body (h1 ,(hash-ref json-obj 'error)))))
+;                  json-obj))
+;            
+;            (response/xexpr
+;             `(html (body (h1 "Error: " ,(or (get-error bindings)
+;                                             "unknown error"))))))))))
 
             
             

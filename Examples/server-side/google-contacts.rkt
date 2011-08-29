@@ -41,14 +41,8 @@
       (printf "~a\n" contacts)
       (response/xexpr
        `(html (body (h1 "Success in retrieving contacts"))))))
-      
-    
-;   (let ([json-obj (get-authorization oauth-obj) ])
-;     (let ([contacts (get-all-contacts (hash-ref json-obj 'access_token))])
-;                      (printf "~a\n" contacts)
-;                      (response/xexpr
-;                       `(html (body (h1 "Success in retreiving contacts")))))))
-                 
+  
+  
   (send/suspend/dispatch gen-resp))
 
 ;;Main function for authorization and access token.
@@ -74,12 +68,6 @@
                                            #:state (encode make-url)
                                            #:scope scope)))))
   
-  ;  (let ([req (send/suspend
-  ;                (lambda (make-url)
-  ;                  (redirect-to 
-  ;                   (request-owner-for-grant oauth-obj 
-  ;                                            #:state (encode make-url)
-  ;                                            #:scope scope))))])
   (define bindings (get-bindings req))
   (define code (get-code bindings))
   (define error (get-error bindings))
@@ -98,37 +86,17 @@
        `(html (body (h1 "Error: " ,(or (get-error bindings)
                                        "unknown error")))))))
 
-  
-;    (let ([bindings (get-bindings req)])
-;      (let ([code (get-code bindings)])
-;        (if code
-;            
-;            (let ([json-obj (request-access-token oauth-obj #:code code)])
-;              (if (hash-ref json-obj 'error #f)
-;                  (response/xexpr
-;                   `(html (body (h1 ,(hash-ref json-obj 'error)))))
-;                  json-obj))
-;            
-;            (response/xexpr
-;             `(html (body (h1 "Error: " ,(or (get-error bindings)
-;                                             "unknown error"))))))))))
 
-            
-            
-  
 
 (define (get-all-contacts access-token)
   (let ([url (string->url "https://www.google.com/m8/feeds/contacts/default/full")])
     (set-url-query! url (list (cons 'access_token access-token)))
     (port->bytes (get-pure-port url
-                 (list "GData-Version: 3.0")))))
+                                (list "GData-Version: 3.0")))))
 
-          
-      
- 
+
 (serve/servlet start #:servlet-path "/"
                #:servlets-root (current-directory))
 
-                             
-    
-    
+
+

@@ -89,23 +89,7 @@
     (set-url-query! url query)
     (redirect-proc (url->string url))))
   
-;  (let ([client-cred (oauth-cc oauth-obj)]
-;        [end-points  (oauth-end-points oauth-obj)]
-;        [redirect-uri (oauth-redirect-uri oauth-obj)]
-;        [response-type (oauth-response-type oauth-obj)])
-;    (let ([url (string->url (end-points-authorization-uri end-points))]
-;          [query (list (cons 'client_id (client-cred-client-id client-cred))
-;                       (cons 'redirect_uri redirect-uri)
-;                       (cons 'response_type response-type)
-;                       (cons 'scope (apply string-append (insert-between scope " ")))
-;                       (cons 'state state))])
-;      (set-url-query! url query)
-;      (redirect-proc (url->string url)))))
-
-
-
   
-
 ;;get-grant-resp: request -> (values string/false string/false string/false) 
 ;;May be second step.Returns three values :
 ;;1. code  : resource owner have granted access
@@ -179,18 +163,7 @@
       ;;instead of error maybe a exception or something else
       (error 'request-token "can't parse, header: ~a , content:~a "
              headers (port->bytes in))))
-  
-  
-;  (let ([token-uri (end-points-token-uri (oauth-end-points oauth-obj))])
-;    (let ([in (post-impure-port (string->url token-uri) 
-;                                (string->bytes/utf-8 (make-post-string)) headers)])
-;      (let ([headers (purify-port in)])
-;        (if (json-content? headers)
-;            (read-json in) ;; may contain error key.
-;            ;;instead of error maybe a exception or something else
-;            (error 'request-token "can't parse, header: ~a , content:~a "
-;                   headers (port->bytes in)))))))
-
+    
 
 ;;request-access-token : oauth string -> hash
 (define (request-access-token oauth-obj #:code code)

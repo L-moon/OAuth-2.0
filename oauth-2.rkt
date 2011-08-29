@@ -74,18 +74,33 @@
                                  #:scope (scope empty)
                                  #:redirect-proc 
                                  (redirect-proc (lambda (str-url) str-url)))
-  (let ([client-cred (oauth-cc oauth-obj)]
-        [end-points  (oauth-end-points oauth-obj)]
-        [redirect-uri (oauth-redirect-uri oauth-obj)]
-        [response-type (oauth-response-type oauth-obj)])
-    (let ([url (string->url (end-points-authorization-uri end-points))]
-          [query (list (cons 'client_id (client-cred-client-id client-cred))
-                       (cons 'redirect_uri redirect-uri)
-                       (cons 'response_type response-type)
-                       (cons 'scope (apply string-append (insert-between scope " ")))
-                       (cons 'state state))])
-      (set-url-query! url query)
-      (redirect-proc (url->string url)))))
+  (define client-cred (oauth-cc oauth-obj))
+  (define end-points (oauth-end-points oauth-obj))
+  (define redirect-uri (oauth-redirect-uri oauth-obj))
+  (define response-type (oauth-response-type oauth-obj))
+  
+  (define url (string->url (end-points-authorization-uri end-points)))
+  (define query (list (cons 'client_id (client-cred-client-id client-cred))
+                      (cons 'redirect_uri redirect-uri)
+                      (cons 'response_type response-type)
+                      (cons 'scope (apply string-append (insert-between scope " ")))
+                      (cons 'state state)))
+  (begin 
+    (set-url-query! url query)
+    (redirect-proc (url->string url))))
+  
+;  (let ([client-cred (oauth-cc oauth-obj)]
+;        [end-points  (oauth-end-points oauth-obj)]
+;        [redirect-uri (oauth-redirect-uri oauth-obj)]
+;        [response-type (oauth-response-type oauth-obj)])
+;    (let ([url (string->url (end-points-authorization-uri end-points))]
+;          [query (list (cons 'client_id (client-cred-client-id client-cred))
+;                       (cons 'redirect_uri redirect-uri)
+;                       (cons 'response_type response-type)
+;                       (cons 'scope (apply string-append (insert-between scope " ")))
+;                       (cons 'state state))])
+;      (set-url-query! url query)
+;      (redirect-proc (url->string url)))))
 
 
 

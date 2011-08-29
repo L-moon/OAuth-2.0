@@ -1,2 +1,30 @@
 A Simple implementation of OAuth-2.0 protocol in Racket.
+This does not fully implement the actual protocol.
+
+Status : Only tested with google oauth flow.
+
+See Example dir for different types of flow and use.
+
+
+There are three basic api for OAuth :
+
+1. request-owner-for-grant : 
+   Asks the owner for grant to use its resource by redirecting it to
+   Authorization/Server URI
+
+2. get-grant-resp : checks if owner has granted us the authorization code 
+
+3. request-access-token : Once the owner has given the grant , request is
+   made to token server for access-token
+
+There is one basic object called  oauth object , which is created
+by function make-oauth-2 , which takes client-id , client-secret ,
+authorization-uri , token-uri , redirect-uri and response-type .
+
+The request-owner-for-grant and request-access-toke both requires oauth object.
+
+
+
+
+
 

@@ -1,0 +1,19 @@
+Note : There are many different ways to use OAuth .
+
+In this example , we retrieve all contacts from google for a user.
+There are two files :
+1. google-contacts.rkt : for getting all contacts
+2. oauth2callback.rkt  : authorization server redirects here,and we redirect
+   back to some continuation in google-contacts.rkt
+
+Main function is get-authorization in google-contacts.rkt.
+You will need to provide oauth object in google-conatcts.rkt
+for the example to work.
+
+
+We use state parameter to pass the continuation url to authorization server, 
+and when google redirect to our redirect-uri , we again redirect to 
+continuation uri from where we continue.
+
+ 
+ 

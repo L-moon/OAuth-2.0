@@ -153,16 +153,15 @@
     (regexp-match? #rx"Content-Type.*json" headers))
   
   (define encode form-urlencoded-encode)
-  (define headers (list "Content-Type: application/x-www-form-urlencoded"))
+  (define extra-headers (list "Content-Type: application/x-www-form-urlencoded"))
   
   (define (make-post-string)
     (let ([client-cred (oauth-cc oauth-obj)]
           [redirect-uri (oauth-redirect-uri oauth-obj)])
-          
+      
       (string-append
        "client_id=" (encode (client-cred-client-id client-cred)) "&"
-       "client_secret=" (encode (client-cred-client-secret client-cred)) "&"
-       ;(unless refresh? (string-append "redirect_uri=" (encode redirect-uri) "&"))
+       "client_secret=" (encode (client-cred-client-secret client-cred)) "&"       
        "grant_type=" grant-type "&"
        (if refresh?
            (string-append "refresh_token=" (encode code-or-token))
@@ -170,15 +169,27 @@
             "redirect_uri=" (encode redirect-uri) "&"
             "code=" (encode code-or-token))))))
   
-  (let ([token-uri (end-points-token-uri (oauth-end-points oauth-obj))])
-    (let ([in (post-impure-port (string->url token-uri) 
-                                (string->bytes/utf-8 (make-post-string)) headers)])
-      (let ([headers (purify-port in)])
-        (if (json-content? headers)
-            (read-json in) ;; may contain error key.
-            ;;instead of error maybe a exception or something else
-            (error 'request-token "can't parse, header: ~a , content:~a "
-                   headers (port->bytes in)))))))
+  (define token-uri (end-points-token-uri (oauth-end-points oauth-obj)))
+  (define in (post-impure-port (string->url token-uri) 
+                               (string->bytes/utf-8 (make-post-string)) extra-headers))
+  (define headers (purify-port in))
+  
+  (if (json-content? headers)
+      (read-json in) ;; may contain error key.
+      ;;instead of error maybe a exception or something else
+      (error 'request-token "can't parse, header: ~a , content:~a "
+             headers (port->bytes in))))
+  
+  
+;  (let ([token-uri (end-points-token-uri (oauth-end-points oauth-obj))])
+;    (let ([in (post-impure-port (string->url token-uri) 
+;                                (string->bytes/utf-8 (make-post-string)) headers)])
+;      (let ([headers (purify-port in)])
+;        (if (json-content? headers)
+;            (read-json in) ;; may contain error key.
+;            ;;instead of error maybe a exception or something else
+;            (error 'request-token "can't parse, header: ~a , content:~a "
+;                   headers (port->bytes in)))))))
 
 
 ;;request-access-token : oauth string -> hash

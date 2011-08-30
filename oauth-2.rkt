@@ -6,6 +6,7 @@
 
 ;;Very basic mechanism for OAuth 2.0 protocol.
 
+(define encode form-urlencoded-encode)
 
 ;;todo move this somewhere else
 (define (insert-between lst v)
@@ -69,22 +70,12 @@
 (define (request-token oauth-obj #:code-or-token code-or-token 
                        #:grant-type (grant-type "authorization_code"))
   
-;  (define auth-code?
-;    (string=? grant-type "authorization_code"))
-  
   (define refresh?
     (string=? grant-type "refresh_token"))
   
   (define (http-ok? headers)
     (regexp-match? #rx"HTTP/.* 200 OK" headers))
-
-  (define (json-content? headers)
-    (regexp-match? #rx"Content-Type.*json" headers))
-  
-  (define (text/plain? headers)
-    (regexp-match? #rx"text/plain" headers))
-  
-  (define encode form-urlencoded-encode)
+      
   (define extra-headers (list "Content-Type: application/x-www-form-urlencoded"))
   
   (define post-string     
@@ -102,26 +93,33 @@
   (define in (post-impure-port (string->url token-uri) 
                                (string->bytes/utf-8 post-string) extra-headers))
   (define headers (purify-port in))
+    
+  (make-json-object headers in))
+  
+
+(define (make-json-object headers in)
   
   ;;as per spec the response should be in json format , but 
   ;;it seems that facebook does not follow it, therefore the hack.
-  (define json-obj 
-    (cond
-      [(json-content? headers) (read-json in)] ;safe
-      [(text/plain? headers) (let ([str (port->string in)]) ; unsafe
-                               (text/plain->json-obj str))]                               
-      [else (error 'request-token "can't parse, header: ~a , content:~a " ;??
-                   headers (port->bytes in))]))  
-  json-obj)
-
-
-
-(define (text/plain->json-obj str)
-  (define dummy-url (string->url
-                     (string-append "http://www.example.com/?"
-                                    str)))
-  (make-hash (url-query dummy-url)))
-
+  (define (text/plain->json-obj str)
+    (define dummy-url (string->url
+                       (string-append "http://www.example.com/?"
+                                      str)))
+    (make-hash (url-query dummy-url)))
+  
+  (case (content-type headers)
+    [(json) (read-json in)] ;safe
+    [(text-plain) (let ([str (port->string in)]) ; unsafe
+                    (text/plain->json-obj str))]                               
+    [else (error 'request-token "can't parse, header: ~a , content:~a " ;??
+                 headers (port->bytes in))]))  
+  
+(define (content-type str)
+  (cond
+    [(regexp-match? #rx"Content-Type.*json" str) 'json]
+    [(regexp-match? #rx"text/plain" str) 'text-plain]
+    [else #f]))
+  
 
 ;;request-access-token : oauth string -> hash
 (define (request-access-token oauth-obj #:code code)

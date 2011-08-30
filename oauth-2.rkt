@@ -17,7 +17,7 @@
                 (cons v (insert-between (rest lst) v)))]))            
 
 
-;;request-owner-for-grant: oauth string (listof string) (string -> any)
+;;request-owner-for-grant: oauth string (listof string) (string -> any) -> any
 ;;This is a first step in authorization process.
 (define (request-owner-for-grant oauth-obj 
                                  #:state (state #f)
@@ -64,7 +64,7 @@
 
   
 
-;;request-token : oauth string string -> hash
+;;request-token : oauth string string -> hash or error
 ;;Third  step in authorization.Produces a json-object which is a hash which either contains
 ;;access-token or some kind of error.
 (define (request-token oauth-obj #:code-or-token code-or-token 
@@ -121,12 +121,12 @@
     [else #f]))
   
 
-;;request-access-token : oauth string -> hash
+;;request-access-token : oauth string -> hash or error
 (define (request-access-token oauth-obj #:code code)
   (request-token oauth-obj #:code-or-token code ))
 
 ;;Not tested
-;;refresh-access-token : oauth string -> hash
+;;refresh-access-token : oauth string -> hash or error
 (define (refresh-access-token oauth-obj #:refresh-token refresh-token)
   (request-token oauth-obj #:code-or-token refresh-token 
                  #:grant-type "refresh_token"))

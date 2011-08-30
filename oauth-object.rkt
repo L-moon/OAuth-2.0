@@ -1,7 +1,8 @@
 #lang racket
 
 (provide get-authorization-uri get-token-uri get-client-id
-         get-client-secret get-redirect-uri get-response-type)
+         get-client-secret get-redirect-uri get-response-type
+         make-oauth-2)
 
 
 ;;Basic client credentials structure

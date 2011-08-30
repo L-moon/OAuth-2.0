@@ -1,61 +1,10 @@
 #lang racket
 (require net/url net/uri-codec)
 (require (planet dherman/json:3:0))
+(require "oauth-object.rkt")
 (require "utils/web-helper.rkt")
 
 ;;Very basic mechanism for OAuth 2.0 protocol.
-
-;;Basic client credentials structure
-(struct client-cred (client-id client-secret)) ;where
-;;client-id is a string and
-;;client-secret is a string
-
-;;OAuth end-points
-(struct end-points (authorization-uri token-uri))
-;;A authorization-uri is a string from where , we ask
-;;the resource owner to grant access.
-
-;;A token-uri is a string from where , we authenticate 
-;;ourself to get the access token , by passing it the
-;;grant code from owner to it.
-
-
-;;A response-type is either
-;;1. code , or
-;;2. token
-;(struct response-type (resp-type))
-
-;;A redirection-uri is a absolute uri
-
-;;A basic oauth structure
-(struct oauth (cc end-points redirect-uri response-type) #:transparent) ; where
-;;cc is client-cred structure
-;;redirect-uri is a string representation of a url
-;;response-type is a string
-
-;;make-outh : client-cred end-points string symbol -> oauth
-;;produces a instance of oauth structure
-;(define (make-oauth #:client-credentials client-cred
-;                    #:oauth-endpoints end-points
-;                    #:redirect-uri redirect-uri
-;                    #:response-type (response-type 'code))
-;  (oauth client-cred end-points redirect-uri (symbol->string response-type)))
-
-
-;;produces oauth object
-(define (make-oauth-2 #:client-id client-id
-                      #:client-secret client-secret
-                      #:authorization-uri authorization-uri
-                      #:token-uri token-uri
-                      #:redirect-uri redirect-uri
-                      #:response-type (response-type 'code))
-  ;;may be check for type?
-  (oauth (client-cred client-id client-secret)
-         (end-points authorization-uri token-uri)
-         redirect-uri
-         (symbol->string response-type)))
-
-
 
 
 ;;todo move this somewhere else
@@ -74,15 +23,11 @@
                                  #:scope (scope empty)
                                  #:redirect-proc 
                                  (redirect-proc (lambda (str-url) str-url)))
-  (define client-cred (oauth-cc oauth-obj))
-  (define end-points (oauth-end-points oauth-obj))
-  (define redirect-uri (oauth-redirect-uri oauth-obj))
-  (define response-type (oauth-response-type oauth-obj))
   
-  (define url (string->url (end-points-authorization-uri end-points)))
-  (define query (list (cons 'client_id (client-cred-client-id client-cred))
-                      (cons 'redirect_uri redirect-uri)
-                      (cons 'response_type response-type)
+  (define url (string->url (get-authorization-uri oauth-obj)))  
+  (define query (list (cons 'client_id (get-client-id oauth-obj))                            
+                      (cons 'redirect_uri (get-redirect-uri oauth-obj))
+                      (cons 'response_type (get-response-type oauth-obj))
                       (cons 'scope (apply string-append (insert-between scope " ")))
                       (cons 'state state)))
   (begin 
@@ -142,23 +87,20 @@
   (define encode form-urlencoded-encode)
   (define extra-headers (list "Content-Type: application/x-www-form-urlencoded"))
   
-  (define (make-post-string)
-    (let ([client-cred (oauth-cc oauth-obj)]
-          [redirect-uri (oauth-redirect-uri oauth-obj)])
-      
-      (string-append
-       "client_id=" (encode (client-cred-client-id client-cred)) "&"
-       "client_secret=" (encode (client-cred-client-secret client-cred)) "&"       
-       "grant_type=" grant-type "&"
-       (if refresh?
-           (string-append "refresh_token=" (encode code-or-token))
-           (string-append 
-            "redirect_uri=" (encode redirect-uri) "&"
-            "code=" (encode code-or-token))))))
+  (define post-string     
+    (string-append
+     "client_id=" (encode (get-client-id oauth-obj))  "&"
+     "client_secret=" (encode (get-client-secret oauth-obj)) "&"       
+     "grant_type=" grant-type "&"
+     (if refresh?
+         (string-append "refresh_token=" (encode code-or-token))
+         (string-append 
+          "redirect_uri=" (encode (get-redirect-uri oauth-obj)) "&"
+          "code=" (encode code-or-token)))))
   
-  (define token-uri (end-points-token-uri (oauth-end-points oauth-obj)))
+  (define token-uri (get-token-uri oauth-obj))
   (define in (post-impure-port (string->url token-uri) 
-                               (string->bytes/utf-8 (make-post-string)) extra-headers))
+                               (string->bytes/utf-8 post-string) extra-headers))
   (define headers (purify-port in))
   
   ;;as per spec the response should be in json format , but 
@@ -171,16 +113,6 @@
       [else (error 'request-token "can't parse, header: ~a , content:~a " ;??
                    headers (port->bytes in))]))  
   json-obj)
-
-                                 
-            
-  
-  
-;  (if (json-content? headers)
-;      (read-json in) ;; may contain error key.
-;      ;;instead of error maybe a exception or something else
-;      (error 'request-token "can't parse, header: ~a , content:~a "
-;             headers (port->bytes in))))
 
 
 
@@ -201,47 +133,10 @@
   (request-token oauth-obj #:code-or-token refresh-token 
                  #:grant-type "refresh_token"))
 
-
-;;functions to extract the field of oauth-obj
-(define (get-authorization-uri oauth-obj)
-  (end-points-authorization-uri (oauth-end-points oauth-obj)))
-
-(define (get-token-uri oauth-obj)
-  (end-points-token-uri (oauth-end-points oauth-obj)))
-
-(define (get-client-id oauth-obj)
-  (client-cred-client-id (oauth-cc oauth-obj)))
-
-(define (get-client-secret oauth-obj)
-  (client-cred-client-secret (oauth-cc oauth-obj)))
-
-(define (get-redirect-uri oauth-obj)
-  (oauth-redirect-uri oauth-obj))
-
-(define (get-response-type oauth-obj)
-  (oauth-response-type oauth-obj))
-
-;(begin
-;  (define oauth-obj  (make-oauth-2
-;                      #:client-id "abc .... blah"
-;                      #:client-secret "45bg......"
-;                      #:authorization-uri "https://accounts.google.com/o/oauth2/auth"
-;                      #:token-uri "https://accounts.google.com/o/oauth2/token"
-;                      #:redirect-uri "http://localhost:8000/oauth2callback.rkt"
-;                      #:response-type 'code))
-;  (list (get-authorization-uri oauth-obj)
-;        (get-token-uri oauth-obj)
-;        (get-client-id oauth-obj)
-;        (get-client-secret oauth-obj)
-;        (get-redirect-uri oauth-obj)
-;        (get-response-type oauth-obj)))
-
-
-
-
 (provide make-oauth-2
          request-owner-for-grant
-         get-grant-resp request-access-token
+         get-grant-resp 
+         request-access-token
          refresh-access-token)
 
 

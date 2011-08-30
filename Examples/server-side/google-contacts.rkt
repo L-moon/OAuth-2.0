@@ -70,21 +70,22 @@
   
   (define bindings (get-bindings req))
   (define code (get-code bindings))
-  (define error (get-error bindings))
+  ;(define error (get-error bindings))
   
   (if code
       
       (let ([json-obj (request-access-token oauth-obj #:code code)])
         (if (hash-ref json-obj 'error #f)
             
+            (send/back
             (response/xexpr
-             `(html (body (h1 ,(hash-ref json-obj 'error)))))
+             `(html (body (h1 ,(hash-ref json-obj 'error))))))
             
             json-obj))
       
-      (response/xexpr
-       `(html (body (h1 "Error: " ,(or (get-error bindings)
-                                       "unknown error")))))))
+      (send/back (response/xexpr
+                  `(html (body (h1 "Error: " ,(or (get-error bindings)
+                                                  "unknown error"))))))))
 
 
 

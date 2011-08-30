@@ -12,12 +12,12 @@
     (send-url 
      (request-owner-for-grant oauth-obj #:scope scope) #:escape? #f)
     ;;enter the code in quotes " ..... "
-    (let ([code (read)])
-      (let ([json-obj (request-access-token oauth-obj #:code code)])
-         (let ([access-token (hash-ref json-obj 'access_token #f)])
-           (if access-token
-               (get-all-contacts access-token)
-               (error 'oops "dumping json object ~a" json-obj)))))))
+    (define code (read))
+    (define json-obj (request-access-token oauth-obj #:code code))
+    (define access-token (hash-ref json-obj 'access_token #f))    
+    (if access-token
+        (get-all-contacts access-token)
+        (error 'oops "dumping json object ~a" json-obj))))
 
 (define (get-all-contacts access-token)
   (let ([url (string->url "https://www.google.com/m8/feeds/contacts/default/full")])

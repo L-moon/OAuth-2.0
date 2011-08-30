@@ -136,6 +136,9 @@
   (define (json-content? headers)
     (regexp-match? #rx"Content-Type.*json" headers))
   
+  (define (text/plain? headers)
+    (regexp-match? #rx"text/plain" headers))
+  
   (define encode form-urlencoded-encode)
   (define extra-headers (list "Content-Type: application/x-www-form-urlencoded"))
   
@@ -158,12 +161,35 @@
                                (string->bytes/utf-8 (make-post-string)) extra-headers))
   (define headers (purify-port in))
   
-  (if (json-content? headers)
-      (read-json in) ;; may contain error key.
-      ;;instead of error maybe a exception or something else
-      (error 'request-token "can't parse, header: ~a , content:~a "
-             headers (port->bytes in))))
-    
+  ;;as per spec the response should be in json format , but 
+  ;;it seems that facebook does not follow it, therefore the hack.
+  (define json-obj 
+    (cond
+      [(json-content? headers) (read-json in)] ;safe
+      [(text/plain? headers) (let ([str (port->string in)]) ; unsafe
+                               (text/plain->json-obj str))]                               
+      [else (error 'request-token "can't parse, header: ~a , content:~a " ;??
+                   headers (port->bytes in))]))  
+  json-obj)
+
+                                 
+            
+  
+  
+;  (if (json-content? headers)
+;      (read-json in) ;; may contain error key.
+;      ;;instead of error maybe a exception or something else
+;      (error 'request-token "can't parse, header: ~a , content:~a "
+;             headers (port->bytes in))))
+
+
+
+(define (text/plain->json-obj str)
+  (define dummy-url (string->url
+                     (string-append "http://www.example.com/?"
+                                    str)))
+  (make-hash (url-query dummy-url)))
+
 
 ;;request-access-token : oauth string -> hash
 (define (request-access-token oauth-obj #:code code)

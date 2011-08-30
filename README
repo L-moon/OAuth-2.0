@@ -7,27 +7,10 @@ Status : This is early stage of project.
 	 Partially tested with facebook oauth flow.
 
 
+See How-to-use-OAuth.txt
 See Example dir for different types of flow and use.
+Also see  http://code.google.com/apis/accounts/docs/OAuth2.html
 
-Step by Step explanation coming soon, till then see http://code.google.com/apis/accounts/docs/OAuth2.html
-
-
-There are three basic api for OAuth :
-
-1. request-owner-for-grant : 
-   Asks the owner/user for grant to use its resource by redirecting it to
-   Authorization/Server URI
-
-2. get-grant-resp : checks if owner/user has granted us the authorization code 
-
-3. request-access-token : Once the owner/user has given the grant , request is
-   made to token server for access-token
-
-There is one basic object called  oauth object , which is created
-by function make-oauth-2 , which takes client-id , client-secret ,
-authorization-uri , token-uri , redirect-uri and response-type .
-
-The request-owner-for-grant and request-access-toke both requires oauth object.
 
 
 

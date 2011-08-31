@@ -131,7 +131,7 @@
   (request-token oauth-obj #:code-or-token refresh-token 
                  #:grant-type "refresh_token"))
 
-(provide make-oauth-2
+(provide make-oauth-2 oauth-object?
          request-owner-for-grant
          get-grant-resp 
          request-access-token

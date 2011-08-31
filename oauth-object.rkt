@@ -2,7 +2,7 @@
 
 (provide get-authorization-uri get-token-uri get-client-id
          get-client-secret get-redirect-uri get-response-type
-         make-oauth-2)
+         make-oauth-2 oauth-object?)
 
 
 ;;Basic client credentials structure
@@ -38,6 +38,9 @@
          (symbol->string response-type)))
 
 
+
+(define (oauth-object? obj)
+  (oauth? obj))
 
          
 ;;functions to extract the field of oauth-obj

@@ -16,24 +16,39 @@
     [else (cons (first lst)
                 (cons v (insert-between (rest lst) v)))]))            
 
-
-;;request-owner-for-grant: oauth string (listof string) (string -> any) -> any
-;;This is a first step in authorization process.
-(define (request-owner-for-grant oauth-obj 
-                                 #:state (state #f)
-                                 #:scope (scope empty)
-                                 #:redirect-proc 
-                                 (redirect-proc (lambda (str-url) str-url)))
-  
+;;make-authorization-request : oauth-object string (listof string) -> string
+(define (make-authorization-request oauth-obj
+                                    #:state state
+                                    #:scope scope)
   (define url (string->url (get-authorization-uri oauth-obj)))  
-  (define query (list (cons 'client_id (get-client-id oauth-obj))                            
-                      (cons 'redirect_uri (get-redirect-uri oauth-obj))
-                      (cons 'response_type (get-response-type oauth-obj))
-                      (cons 'scope (apply string-append (insert-between scope " ")))
-                      (cons 'state state)))
-  (begin 
-    (set-url-query! url query)
-    (redirect-proc (url->string url))))
+  (define response-type (get-response-type oauth-obj))
+  (define (make-query)
+    (list (cons 'client_id (get-client-id oauth-obj))                            
+          (cons 'redirect_uri (get-redirect-uri oauth-obj))
+          (cons 'response_type response-type)
+          (cons 'scope (apply string-append (insert-between scope " ")))
+          (cons 'state state)))
+    
+  (if response-type
+      (begin 
+        (set-url-query! url (make-query))
+        url)
+      (error 'make-authorization-request "grant-type should be either ~a or ~a"
+             'authorization-code 'token)))
+
+      
+
+;;request-authorization-code : oauth-object string (listof string) (string -> any) -> any
+(define (request-authorization-code oauth-obj
+                                    #:state (state #f)
+                                    #:scope (scope empty)
+                                    #:request-method (req-method (lambda (v) v)))
+  (define str-url (url->string
+                   (make-authorization-request oauth-obj 
+                                               #:state state
+                                               #:scope scope)))
+  (req-method str-url))
+
   
   
 ;;get-grant-resp: request -> (values string/false string/false string/false) 
@@ -131,11 +146,15 @@
   (request-token oauth-obj #:code-or-token refresh-token 
                  #:grant-type "refresh_token"))
 
+  
+  
+
 (provide make-oauth-2 oauth-object?
          request-owner-for-grant
          get-grant-resp 
          request-access-token
-         refresh-access-token)
+         refresh-access-token
+         request-access-token-cc)
 
 
 

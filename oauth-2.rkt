@@ -78,37 +78,91 @@
             (get-error bindings))))
 
   
+;;make-post-string : (listof (pairof symbol (or string #f))) -> string
+(define (make-post-string loq)
+  (define filtered-loq (filter (lambda (query) (cdr query)) loq))
+  (define to-string (map (lambda (query) (string-append
+                                          (symbol->string (car query))
+                                          "="
+                                          (encode (cdr query))))
+                         filtered-loq))
+  (apply string-append (insert-between to-string "&")))
 
-;;request-token : oauth string string -> hash or error
-;;Third  step in authorization.Produces a json-object which is a hash which either contains
-;;access-token or some kind of error.
-(define (request-token oauth-obj #:code-or-token code-or-token 
-                       #:grant-type (grant-type "authorization_code"))
+;;grant-type : symbol -> string
+(define (grant-type->string gt)
+  (case gt
+    [(authorization-code) "authorization_code"]
+    [(password) "password"]
+    [(client-cred) "client_credentials"]
+    [else (error 'grant-type->string "invalid grant type ~a" gt)]))
+
+;;make-common-query : oauth-object boolean -> (listof (pairof symbol string))
+(define (make-common-query-list oauth-obj with-redirect?)
+  (define common
+    (list (cons 'client_id (get-client-id oauth-obj))
+          (cons 'client_secret (get-client-secret oauth-obj))
+          (cons 'grant_type (grant-type->string (get-grant-type oauth-obj)))))
   
-  (define refresh?
-    (string=? grant-type "refresh_token"))
+    (if with-redirect?        
+        (append common
+                (list (cons 'redirect_uri (get-redirect-uri oauth-obj))))
+        common))
+         
+   
+
+;;make-post-type-auth-code : oauth-object string -> string 
+(define (make-post-type-auth-code oauth-obj code)
+  (make-post-string
+   (append (make-common-query-list oauth-obj #t)
+           (list (cons 'code code)))))
+   
+;;make-post-type-password : oauth-object (or string #f) (or string #f) (or string #f) -> string
+(define (make-post-type-password oauth-obj username
+                                           password
+                                           scope)
+  (make-post-string
+   (append (make-common-query-list oauth-obj #f)
+           (list (cons 'username username)
+                 (cons 'password password)
+                 (cons 'scope scope)))))
+
+;;make-post-type-client : oauth-object (or string #f) -> string
+(define (make-post-type-client oauth-obj scope)
+  (make-post-string
+   (append (make-common-query-list oauth-obj #f)
+           (list (cons 'scope scope)))))
+
   
-  (define (http-ok? headers)
-    (regexp-match? #rx"HTTP/.* 200 OK" headers))
-      
+;;make-access-request : oauth-object (or string #f) (or string #f) (or string #f) (or string #f) -> string
+(define (make-access-request oauth-obj code username password scope)
+  (define grant-type (get-grant-type oauth-obj))
+  (define post-string
+    (case grant-type
+      [(authorization-code) (make-post-type-auth-code oauth-obj code)]
+      [(password) (make-post-type-password oauth-obj username password scope)]
+      [(client-cred) (make-post-type-client oauth-obj scope)]
+      [else (error 'make-access-request "unknown grant-type ~a" grant-type)]))
+  
+  post-string)
+
+;;request-access-token: oauth-object (or string #f) (or string #f) (or string #f) (listof string) -> hash
+(define (request-access-token oauth-obj
+                              #:code (code #f)
+                              #:username (username #f)
+                              #:password (password #f)
+                              #:scope (scope empty))
+  (define new-scope (if (empty? scope) #f (apply string-append (insert-between scope " "))))
+  (define post-string (make-access-request oauth-obj code username password new-scope))
+  (request-token oauth-obj post-string))
+
+;;request-token: oauth-object string -> hash
+(define (request-token oauth-obj post-string)
   (define extra-headers (list "Content-Type: application/x-www-form-urlencoded"))
-  
-  (define post-string     
-    (string-append
-     "client_id=" (encode (get-client-id oauth-obj))  "&"
-     "client_secret=" (encode (get-client-secret oauth-obj)) "&"       
-     "grant_type=" grant-type "&"
-     (if refresh?
-         (string-append "refresh_token=" (encode code-or-token))
-         (string-append 
-          "redirect_uri=" (encode (get-redirect-uri oauth-obj)) "&"
-          "code=" (encode code-or-token)))))
-  
   (define token-uri (get-token-uri oauth-obj))
   (define in (post-impure-port (string->url token-uri) 
                                (string->bytes/utf-8 post-string) extra-headers))
   (define headers (purify-port in))
-    
+  
   (make-json-object headers in))
   
 
@@ -136,26 +190,13 @@
     [else #f]))
   
 
-;;request-access-token : oauth string -> hash or error
-(define (request-access-token oauth-obj #:code code)
-  (request-token oauth-obj #:code-or-token code ))
-
-;;Not tested
-;;refresh-access-token : oauth string -> hash or error
-(define (refresh-access-token oauth-obj #:refresh-token refresh-token)
-  (request-token oauth-obj #:code-or-token refresh-token 
-                 #:grant-type "refresh_token"))
-
-  
   
 
 (provide make-oauth-2 oauth-object?
-         request-owner-for-grant
+         request-authorization-code
          get-grant-resp 
-         request-access-token
-         refresh-access-token
-         request-access-token-cc)
-
+         request-access-token)
+         
 
 
   

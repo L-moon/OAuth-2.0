@@ -71,17 +71,17 @@
       [(token) "token"]
       [else #f])))
 
-(begin
-  (define oauth-obj  (make-oauth-2
-                      #:client-id "abc .... blah"
-                      #:client-secret "45bg......"
-                      #:authorization-uri "https://accounts.google.com/o/oauth2/auth"
-                      #:token-uri "https://accounts.google.com/o/oauth2/token"
-                      #:redirect-uri "http://localhost:8000/oauth2callback.rkt"
-                      #:grant-type 'authorization-code))
-  (list (get-authorization-uri oauth-obj)
-        (get-token-uri oauth-obj)
-        (get-client-id oauth-obj)
-        (get-client-secret oauth-obj)
-        (get-redirect-uri oauth-obj)
-        (get-response-type oauth-obj)))
+;(begin
+;  (define oauth-obj  (make-oauth-2
+;                      #:client-id "abc .... blah"
+;                      #:client-secret "45bg......"
+;                      #:authorization-uri "https://accounts.google.com/o/oauth2/auth"
+;                      #:token-uri "https://accounts.google.com/o/oauth2/token"
+;                      #:redirect-uri "http://localhost:8000/oauth2callback.rkt"
+;                      #:grant-type 'authorization-code))
+;  (list (get-authorization-uri oauth-obj)
+;        (get-token-uri oauth-obj)
+;        (get-client-id oauth-obj)
+;        (get-client-secret oauth-obj)
+;        (get-redirect-uri oauth-obj)
+;        (get-response-type oauth-obj)))

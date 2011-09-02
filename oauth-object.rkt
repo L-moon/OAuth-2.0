@@ -31,11 +31,19 @@
                       #:authorization-uri authorization-uri
                       #:token-uri token-uri
                       #:redirect-uri redirect-uri
-                      #:grant-type (grant-type 'authorization-code))  
-  (oauth (client-cred client-id client-secret)
-         (end-points authorization-uri token-uri)
-         redirect-uri
-         grant-type))
+                      #:grant-type (grant-type 'authorization-code))
+  
+  (define check-grant-type
+    (case grant-type
+      [(authorization-code token password client-cred) #t]
+      [else #f]))
+  
+  (if check-grant-type 
+      (oauth (client-cred client-id client-secret)
+             (end-points authorization-uri token-uri)
+             redirect-uri
+             grant-type)
+      (error 'make-oauth-2 "invalid grant type ~a" grant-type)))
 
 
 

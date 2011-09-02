@@ -2,7 +2,7 @@
 
 (provide get-authorization-uri get-token-uri get-client-id
          get-client-secret get-redirect-uri get-response-type
-         make-oauth-2 oauth-object?)
+         make-oauth-2 oauth-object? get-grant-type)
 
 
 ;;Basic client credentials structure
@@ -20,7 +20,7 @@
 ;;grant code from owner to it.
 
 ;;A basic oauth structure
-(struct oauth (cc end-points redirect-uri response-type) #:transparent) ; where
+(struct oauth (cc end-points redirect-uri grant-type)) ; where
 ;;cc is client-cred structure
 ;;redirect-uri is a string representation of a url
 ;;response-type is a string 
@@ -31,11 +31,13 @@
                       #:authorization-uri authorization-uri
                       #:token-uri token-uri
                       #:redirect-uri redirect-uri
-                      #:response-type (response-type 'code))  
+                      #:grant-type (grant-type 'authorization-code))  
   (oauth (client-cred client-id client-secret)
          (end-points authorization-uri token-uri)
          redirect-uri
-         (symbol->string response-type)))
+         grant-type))
+
+
 
 
 
@@ -59,21 +61,27 @@
 (define (get-redirect-uri oauth-obj)
   (oauth-redirect-uri oauth-obj))
 
+(define (get-grant-type oauth-obj)
+  (oauth-grant-type oauth-obj))
+
 (define (get-response-type oauth-obj)
-  (oauth-response-type oauth-obj))
+  (let ([grant-type (get-grant-type oauth-obj)])
+    (case grant-type
+      [(authorization-code) "code"]
+      [(token) "token"]
+      [else #f])))
 
-
-;(begin
-;  (define oauth-obj  (make-oauth-2
-;                      #:client-id "abc .... blah"
-;                      #:client-secret "45bg......"
-;                      #:authorization-uri "https://accounts.google.com/o/oauth2/auth"
-;                      #:token-uri "https://accounts.google.com/o/oauth2/token"
-;                      #:redirect-uri "http://localhost:8000/oauth2callback.rkt"
-;                      #:response-type 'code))
-;  (list (get-authorization-uri oauth-obj)
-;        (get-token-uri oauth-obj)
-;        (get-client-id oauth-obj)
-;        (get-client-secret oauth-obj)
-;        (get-redirect-uri oauth-obj)
-;        (get-response-type oauth-obj)))
+(begin
+  (define oauth-obj  (make-oauth-2
+                      #:client-id "abc .... blah"
+                      #:client-secret "45bg......"
+                      #:authorization-uri "https://accounts.google.com/o/oauth2/auth"
+                      #:token-uri "https://accounts.google.com/o/oauth2/token"
+                      #:redirect-uri "http://localhost:8000/oauth2callback.rkt"
+                      #:grant-type 'authorization-code))
+  (list (get-authorization-uri oauth-obj)
+        (get-token-uri oauth-obj)
+        (get-client-id oauth-obj)
+        (get-client-secret oauth-obj)
+        (get-redirect-uri oauth-obj)
+        (get-response-type oauth-obj)))

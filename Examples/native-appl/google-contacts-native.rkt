@@ -10,7 +10,7 @@
 (define (get-all-google-contacts oauth-obj)
   (begin 
     (send-url 
-     (request-owner-for-grant oauth-obj #:scope scope) #:escape? #f)
+     (request-authorization-code oauth-obj #:scope scope) #:escape? #f)
     ;;enter the code in quotes " ..... "
     (define code (read))
     (define json-obj (request-access-token oauth-obj #:code code))

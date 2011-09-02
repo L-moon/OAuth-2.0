@@ -19,7 +19,7 @@
 
 (define scope (list "email"))
 
-(define (get-graph-data access-token)
+(define (get-graph-data access-token )
   (let ([url (string->url "https://graph.facebook.com/me")])
     (set-url-query! url (list (cons 'access_token access-token)))
     (port->bytes (get-pure-port url))))
@@ -28,8 +28,8 @@
 ;;request access token , since in a way we are requesting
 ;;our own resource. 
 
-(let ([a-hash (request-access-token oauth-obj #:scope scope)])
+(let ([a-hash (request-access-token oauth-obj #:scope scope )])  
   (let ([access-token (hash-ref a-hash 'access_token #f)])
     (when access-token
-      (get-graph-data access-token))))
+      (get-graph-data access-token ))))
 

@@ -22,7 +22,7 @@
   (define req (send/suspend
                (lambda (make-url)
                  (redirect-to 
-                  (request-owner-for-grant oauth-obj 
+                  (request-authorization-code oauth-obj 
                                            #:state (encode make-url)
                                            #:scope scope)))))
   

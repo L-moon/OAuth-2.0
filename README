@@ -1,10 +1,9 @@
 A Simple implementation of OAuth-2.0 client protocol in Racket.
 
-Status : 
-         Partially tested with google oauth flow.
-	 Partially tested with facebook oauth flow.
-
-
+Current it is usable , but api's not fixed and no documentation.
+Lib will became stable when I upload it to planet , which I hope
+to do in a week or two.
+         
 See Example dir for different types of flow and use.
 Also see  http://code.google.com/apis/accounts/docs/OAuth2.html
 

@@ -2,7 +2,7 @@
 
 (provide get-authorization-uri get-token-uri get-client-id
          get-client-secret get-redirect-uri get-response-type
-         make-oauth-2 oauth-object? get-grant-type)
+         make-oauth-2 oauth-object? get-grant-type make-oauth-with-grant-type)
 
 
 ;;Basic client credentials structure
@@ -20,7 +20,7 @@
 ;;grant code from owner to it.
 
 ;;A basic oauth structure
-(struct oauth (cc end-points redirect-uri grant-type)) ; where
+(struct oauth (cc end-points redirect-uri grant-type) #:mutable) ; where
 ;;cc is client-cred structure
 ;;redirect-uri is a string representation of a url
 ;;response-type is a string 
@@ -35,7 +35,7 @@
   
   (define check-grant-type
     (case grant-type
-      [(authorization-code token password client-cred) #t]
+      [(authorization-code token password client-cred refresh-token) #t]
       [else #f]))
   
   (if check-grant-type 
@@ -47,10 +47,17 @@
 
 
 
-
-
 (define (oauth-object? obj)
   (oauth? obj))
+
+
+(define (make-oauth-with-grant-type oauth-obj grant-type)
+  (make-oauth-2 #:client-id (get-client-id oauth-obj)
+                #:client-secret (get-client-secret oauth-obj)
+                #:authorization-uri (get-authorization-uri oauth-obj)
+                #:token-uri (get-token-uri oauth-obj)
+                #:redirect-uri (get-redirect-uri oauth-obj)
+                #:grant-type grant-type)) 
 
          
 ;;functions to extract the field of oauth-obj

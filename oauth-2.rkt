@@ -94,6 +94,7 @@
     [(authorization-code) "authorization_code"]
     [(password) "password"]
     [(client-cred) "client_credentials"]
+    [(refresh-token) "refresh_token"]
     [else (error 'grant-type->string "invalid grant type ~a" gt)]))
 
 ;;make-common-query : oauth-object boolean -> (listof (pairof symbol string))
@@ -132,28 +133,43 @@
    (append (make-common-query-list oauth-obj #f)
            (list (cons 'scope scope)))))
 
-  
-;;make-access-request : oauth-object (or string #f) (or string #f) (or string #f) (or string #f) -> string
-(define (make-access-request oauth-obj code username password scope)
+;;make-post-type-refresh : oauth-object (or string #f) (or string #f) -> string
+(define (make-post-type-refresh oauth-obj refresh-token scope)
+  (make-post-string
+   (append (make-common-query-list oauth-obj #f)
+           (list (cons 'refresh_token refresh-token)
+                 (cons 'scope scope)))))
+
+;;make-access-request : oauth-object (or string #f) (or string #f) (or string #f) (or string #f) (or string #f) -> string
+(define (make-access-request oauth-obj code username password refresh-token scope)
   (define grant-type (get-grant-type oauth-obj))
   (define post-string
     (case grant-type
       [(authorization-code) (make-post-type-auth-code oauth-obj code)]
       [(password) (make-post-type-password oauth-obj username password scope)]
       [(client-cred) (make-post-type-client oauth-obj scope)]
+      [(refresh-token) (make-post-type-refresh oauth-obj refresh-token scope)]
       [else (error 'make-access-request "unknown grant-type ~a" grant-type)]))
   
   post-string)
 
-;;request-access-token: oauth-object (or string #f) (or string #f) (or string #f) (listof string) -> hash
+;;request-access-token: oauth-object (or string #f) (or string #f) (or string #f) (or string #f) (listof string) -> hash
 (define (request-access-token oauth-obj
                               #:code (code #f)
                               #:username (username #f)
                               #:password (password #f)
+                              #:refresh-token (refresh-token #f)
                               #:scope (scope empty))
+  
+  
+  
+  (define new-oauth-obj (if refresh-token 
+                            (make-oauth-with-grant-type oauth-obj 'refresh-token)
+                            oauth-obj))
+  
   (define new-scope (if (empty? scope) #f (apply string-append (insert-between scope " "))))
-  (define post-string (make-access-request oauth-obj code username password new-scope))
-  (request-token oauth-obj post-string))
+  (define post-string (make-access-request new-oauth-obj code username password refresh-token new-scope))  
+  (request-token new-oauth-obj post-string))
 
 ;;request-token: oauth-object string -> hash
 (define (request-token oauth-obj post-string)

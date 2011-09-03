@@ -159,11 +159,14 @@
 (define (request-token oauth-obj post-string)
   (define extra-headers (list "Content-Type: application/x-www-form-urlencoded"))
   (define token-uri (get-token-uri oauth-obj))
-  (define in (post-impure-port (string->url token-uri) 
-                               (string->bytes/utf-8 post-string) extra-headers))
-  (define headers (purify-port in))
-  
-  (make-json-object headers in))
+  (call/input-url (string->url token-uri)
+                  (lambda (url)
+                    (post-impure-port url
+                                      (string->bytes/utf-8 post-string)
+                                      extra-headers))
+                  (lambda (in)
+                    (make-json-object (purify-port in) in))))
+                    
   
 
 (define (make-json-object headers in)

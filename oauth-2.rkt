@@ -8,6 +8,9 @@
 
 (define encode form-urlencoded-encode)
 
+(struct exn:fail:authorization exn:fail (type))
+
+
 ;;todo move this somewhere else
 (define (insert-between lst v)
   (cond
@@ -199,8 +202,13 @@
     [(json) (read-json in)] ;safe
     [(text-plain) (let ([str (port->string in)]) ; unsafe                    
                     (text/plain->json-obj str))]                               
-    [else (error 'request-token "can't parse, header: ~a , content:~a " ;??
-                 headers (port->bytes in))]))  
+    [else (raise
+           (exn:fail:authorization
+            (format "request-token-error: Cannot parse header: ~a \n content: ~a"
+                    headers (port->bytes in)) 'request-access-token))]))
+    
+;     (error 'request-token "can't parse, header: ~a , content:~a " ;??
+;                 headers (port->bytes in))]))  
   
 (define (content-type str)
   (cond
@@ -214,7 +222,9 @@
 (provide make-oauth-2 oauth-object?
          request-authorization-code
          get-grant-resp 
-         request-access-token)
+         request-access-token
+         (struct-out exn:fail:authorization))
+
          
 
 

@@ -5,7 +5,7 @@
 (require "state.rkt")
 (provide get-authorization-web-flow)
 
-(define (get-authorization-web-flow oauth-obj #:scope (scope #f))
+(define (get-authorization-web-flow oauth-obj #:scope (scope empty))
   
   (define req (send/suspend
                (lambda (a-url)

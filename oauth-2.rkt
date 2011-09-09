@@ -25,11 +25,13 @@
                                     #:scope scope)
   (define url (string->url (get-authorization-uri oauth-obj)))  
   (define response-type (get-response-type oauth-obj))
+  (define new-scope (if (empty? scope) #f (apply string-append (insert-between scope " "))))
   (define (make-query)
     (list (cons 'client_id (get-client-id oauth-obj))                            
           (cons 'redirect_uri (get-redirect-uri oauth-obj))
           (cons 'response_type response-type)
-          (cons 'scope (apply string-append (insert-between scope " ")))
+          (cons 'scope new-scope)
+                ;(apply string-append (insert-between scope " ")))
           (cons 'state state)))
     
   (if response-type
@@ -46,6 +48,7 @@
                                     #:state (state #f)
                                     #:scope (scope empty)
                                     #:request-method (req-method (lambda (v) v)))
+  
   (define str-url (url->string
                    (make-authorization-request oauth-obj 
                                                #:state state

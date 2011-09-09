@@ -223,6 +223,7 @@
          request-authorization-code
          get-grant-resp 
          request-access-token
+         make-oauth-with-grant-type
          (struct-out exn:fail:authorization))
 
          

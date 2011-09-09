@@ -5,5 +5,5 @@
          
 
 (provide (all-from-out (file "../oauth-2.rkt"))
- get-authorization
+ get-authorization-web-flow
  may-be-callback)

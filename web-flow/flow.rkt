@@ -3,9 +3,9 @@
 (require web-server/servlet/web)
 (require (file "../oauth-2.rkt"))
 (require "state.rkt")
-(provide get-authorization)
+(provide get-authorization-web-flow)
 
-(define (get-authorization oauth-obj #:scope (scope #f))
+(define (get-authorization-web-flow oauth-obj #:scope (scope #f))
   
   (define req (send/suspend
                (lambda (a-url)

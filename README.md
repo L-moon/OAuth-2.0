@@ -70,6 +70,20 @@ Low Level Api's
 See oauth-2.rkt
 
 
+Note:
+==========
+
+When using serve/servlet , provide following extra keyword argument :
+
+```scheme
+#:servlet-namespace 
+```
+add module path of *authorization.rkt* to it.
+
+```scheme
+#:file-not-found-responder 
+```
+set it to *may-be-callback*
 
 
 Example of Web flow using statefull servlet from example dir.

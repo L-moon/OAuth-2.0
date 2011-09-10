@@ -1,17 +1,17 @@
 #lang racket
-
+(require racket/serialize)
 (provide get-authorization-uri get-token-uri get-client-id
          get-client-secret get-redirect-uri get-response-type
          make-oauth-2 oauth-object? get-grant-type make-oauth-with-grant-type)
 
 
 ;;Basic client credentials structure
-(struct client-cred (client-id client-secret)) ;where
+(serializable-struct client-cred (client-id client-secret)) ;where
 ;;client-id is a string and
 ;;client-secret is a string
 
 ;;OAuth end-points
-(struct end-points (authorization-uri token-uri))
+(serializable-struct end-points (authorization-uri token-uri))
 ;;A authorization-uri is a string from where , we ask
 ;;the resource owner to grant access.
 
@@ -20,7 +20,7 @@
 ;;grant code from owner to it.
 
 ;;A basic oauth structure
-(struct oauth (cc end-points redirect-uri grant-type) #:mutable) ; where
+(serializable-struct oauth (cc end-points redirect-uri grant-type) ) ; where
 ;;cc is client-cred structure
 ;;redirect-uri is a string representation of a url
 ;;response-type is a string 

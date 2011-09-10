@@ -26,7 +26,7 @@ Objects
 High Level Api's
 =================
 1. ```scheme
-(get-authorization-web-flow oauth-obj #:scope scope)
+(get-authorization-web-flow oauth-obj #:scope (scope empty))
 ```
 
 2. ```scheme

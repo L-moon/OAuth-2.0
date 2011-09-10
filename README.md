@@ -25,24 +25,36 @@ Objects
 	
 High Level Api's
 =================
-1. ```scheme
-(get-authorization-web-flow oauth-obj #:scope (scope empty))
+Bindings provided from **authorization.rkt**
+
+
+
+```scheme
+(get-authorization-web-flow oauth-obj #:scope (scope empty)) ;;for statefull servlets
+```
+```scheme
+(stateless:get-authorization-web-flow oauth-obj #:scope (scope empty)) ;;for stateless servlets
 ```
 
-2. ```scheme
+```scheme
 (get-authorization-password oauth-obj 
                                     #:scope (scope empty) 
                                     #:username username
                                     #:password password) 
 ```
 
-3. ```scheme
+```scheme
 (get-authorization-client-cred oauth-obj #:scope (scope empty))
 ```
 
-4. ```scheme
+```scheme
 (get-authorization-local-browser oauth-obj #:scope (scope empty))
 ```
+
+```scheme
+(get-authorization-refresh-token oauth-obj #:refresh-token refresh-token)
+```
+
 
 All of them returns *hash object* , which may contains access_token
 
